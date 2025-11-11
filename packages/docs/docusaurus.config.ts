@@ -57,7 +57,7 @@ const config: Config = {
                     customCss: "./src/css/custom.css"
                 },
                 blog: {
-                    blogTitle: "TypeArch's Blog",
+                    blogTitle: "typectx's Blog",
                     blogDescription: "News, releases, and more!",
                     blogSidebarCount: "ALL",
                     blogSidebarTitle: "News, releases, and more!"
