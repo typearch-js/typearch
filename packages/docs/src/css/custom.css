@@ -406,7 +406,7 @@ html.blog-wrapper main.col > article header > :nth-child(1) {
     grid-column-start: 1;
     grid-column-end: 3;
     grid-row: 1;
-    font-size: 2vw;
+    font-size: 2rem;
     padding-bottom: 0.5rem;
     margin: 0;
     background: linear-gradient(120deg, #87f2ff 0%, #2fc7ff 40%, #0f8ff0 80%);
