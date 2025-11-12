@@ -64,7 +64,12 @@ const config: Config = {
             } satisfies Preset.Options
         ]
     ],
-
+    scripts: [
+        {
+            src: "https://scripts.simpleanalyticscdn.com/latest.js",
+            async: true
+        }
+    ],
     themeConfig: {
         colorMode: {
             defaultMode: "dark",
