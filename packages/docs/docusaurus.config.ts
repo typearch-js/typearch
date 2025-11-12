@@ -6,8 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic"
 
 const config: Config = {
     title: "typectx",
-    tagline:
-        "First fully type-inferred SOLID architecture framework for Typescript",
+    tagline: "Fully type-inferred Context and DI container for Typescript",
     favicon: "img/typectx-logo.png",
 
     // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -53,9 +52,14 @@ const config: Config = {
                     editUrl:
                         "https://github.com/typectx/typectx/tree/main/packages/docs/"
                 },
-                blog: false,
                 theme: {
                     customCss: "./src/css/custom.css"
+                },
+                blog: {
+                    blogTitle: "typectx's Blog",
+                    blogDescription: "News, releases, and more!",
+                    blogSidebarCount: "ALL",
+                    blogSidebarTitle: "News, releases, and more!"
                 }
             } satisfies Preset.Options
         ]
@@ -81,6 +85,11 @@ const config: Config = {
                     sidebarId: "sidebar",
                     position: "left",
                     label: "Docs"
+                },
+                {
+                    to: "blog",
+                    label: "Blog",
+                    position: "left"
                 },
                 {
                     href: "https://www.npmjs.com/package/typectx",
