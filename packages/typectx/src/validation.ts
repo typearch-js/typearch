@@ -99,10 +99,10 @@ export function assertProductConfig(
     const hiredSuppliers = config.hiredSuppliers ?? []
     const hiredAssemblers = config.hiredAssemblers ?? []
 
-    assertSuppliers(name, suppliers)
-    assertResourceSuppliers(name, optionals)
-    assertProductSuppliers(name, assemblers)
-    assertSuppliers(name, hiredSuppliers, true)
+    assertSuppliers(name,suppliers)
+    assertResourceSuppliers(name,optionals)
+    assertProductSuppliers(name,assemblers)
+    assertSuppliers(name,hiredSuppliers, true)
     assertProductSuppliers(name, hiredAssemblers, true)
 
     if (config.init !== undefined) {
@@ -117,25 +117,23 @@ export function assertProductConfig(
 }
 
 export function assertResourceSupplier(
-    name: string,
     supplier: unknown
-): asserts supplier is ProductSupplier {
-    assertHasProperty(name, supplier, "_")
-    assertHasProperty(name, supplier._, "resource")
-    assertHasProperty(name, supplier, "name")
-    assertString(name, supplier.name)
+): asserts supplier is ResourceSupplier {
+    assertHasProperty("noname", supplier, "name")
+    assertString("noname", supplier.name)
+    assertHasProperty(supplier.name, supplier, "_")
+    assertHasProperty(supplier.name,  supplier._, "resource")
 }
 
 export function assertProductSupplier(
-    name: string,
     supplier: unknown,
     allowMocks: boolean = false
 ): asserts supplier is ProductSupplier {
-    assertHasProperty(name, supplier, "_")
-    assertHasProperty(name, supplier._, "product")
-    assertHasProperty(name, supplier._, "isMock")
-    assertHasProperty(name, supplier, "name")
-    assertString(name, supplier.name)
+    assertHasProperty("noname", supplier, "name")
+    assertString("noname", supplier.name)
+    assertHasProperty(supplier.name, supplier, "_")
+    assertHasProperty(supplier.name, supplier._, "product")
+    assertHasProperty(supplier.name, supplier._, "isMock")
 
     if (
         !allowMocks &&
@@ -183,10 +181,10 @@ export function assertSuppliers(
 
     suppliers.forEach((supplier) => {
         try {
-            assertResourceSupplier(name, supplier)
+            assertResourceSupplier(supplier)
             return
         } catch (e) {
-            assertProductSupplier(name, supplier, allowMocks)
+            assertProductSupplier(supplier, allowMocks)
         }
     })
 }
@@ -199,7 +197,7 @@ export function assertResourceSuppliers(
         throw new TypeError(`${name} must be an array`)
     }
     suppliers.forEach((supplier) => {
-        assertResourceSupplier(name, supplier)
+        assertResourceSupplier(supplier)
     })
 }
 
@@ -212,6 +210,6 @@ export function assertProductSuppliers(
         throw new TypeError(`${name} must be an array`)
     }
     suppliers.forEach((supplier) => {
-        assertProductSupplier(name, supplier, allowMocks)
+        assertProductSupplier(supplier, allowMocks)
     })
 }
