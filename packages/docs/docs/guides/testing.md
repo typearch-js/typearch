@@ -1,5 +1,5 @@
 ---
-title: "Testing and Mocking - typectx"
+title: "Testing and Mocking"
 description: "Learn how to test and mock dependencies with typectx. Use `.pack()` for simple mocks and `.mock()` with `.hire()` for complex testing scenarios in TypeScript."
 keywords:
     - testing
