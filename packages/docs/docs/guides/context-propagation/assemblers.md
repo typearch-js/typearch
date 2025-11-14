@@ -177,7 +177,7 @@ const $$App = market.offer("app").asProduct({
         const role = session.user.role
         if (role === "admin") {
             const $Panel = $$($$adminPanel)
-                .hire($$adminDashboard, $$adminProfile)
+                .hire([$$adminDashboard, $$adminProfile])
                 .assemble({
                     ...$,
                     ...index(
