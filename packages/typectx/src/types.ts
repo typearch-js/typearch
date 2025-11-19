@@ -344,8 +344,11 @@ export type ExcludeSuppliersType<
     : []
 
 /**
- * Recursively collects direct dependencies
- * Used by ToSupply
+ * Recursively collects transitive suppliers (excluding optionals and assemblers)
+ * of a supplier into a team.
+ * This type walks through the dependency tree, collecting each supplier and all of its
+ * nested dependencies into a flattened array. This forms the "team" - the complete
+ * set of suppliers needed to assemble a product. The runtime equivalent is the `team()` utility.
  *
  * @internal
  */
@@ -368,7 +371,7 @@ export type TransitiveSuppliers<SUPPLIERS extends Supplier[]> =
         : []
 
 /**
- * Recursively collects ALL transitive dependencies (including assemblers, optionals, and hired)
+ * Recursively collects ALL transitive dependencies (including assemblers and optionals)
  * for strict circular dependency detection. Unlike TransitiveSuppliers, this traverses
  * "weak" links that are not part of the immediate supply chain but could form cycles.
  *
