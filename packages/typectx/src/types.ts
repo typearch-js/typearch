@@ -98,7 +98,13 @@ export type ProductSupplier<
     OPTIONALS extends ResourceSupplier[] = ResourceSupplier[],
     ASSEMBLERS extends MainProductSupplier[] = any[],
     HIRED extends ProductSupplier[] = any[],
-    TEAM extends Supplier[] = any[]
+    TEAM extends Supplier[] = any[],
+    $MAP extends $<MergeSuppliers<SUPPLIERS, HIRED>, OPTIONALS> = $<[], []>,
+    $$MAP extends $$<
+        MergeSuppliers<SUPPLIERS, HIRED>,
+        OPTIONALS,
+        MergeSuppliers<ASSEMBLERS, HIRED>
+    > = $$<[], [], []>
 > = BaseProductSupplier<NAME, CONSTRAINT> & {
     /** Array of suppliers this product depends on */
     suppliers: SUPPLIERS
@@ -109,19 +115,13 @@ export type ProductSupplier<
     hired: HIRED
     team: TEAM
     /** Factory function that creates the product value from its dependencies */
-    factory: (
-        $: $<MergeSuppliers<SUPPLIERS, HIRED>, OPTIONALS>,
-        $$: $$<MergeSuppliers<SUPPLIERS, HIRED>, OPTIONALS, ASSEMBLERS>
-    ) => CONSTRAINT
+    factory: ($: $MAP, $$: $$MAP) => CONSTRAINT
     /** Assembles the product by resolving dependencies */
     assemble: (
         supplied: ToSupply<SUPPLIERS, OPTIONALS, HIRED>
     ) => Product<CONSTRAINT, ProductSupplier>
     /** Optional initialization function called after factory */
-    init?: (
-        value: CONSTRAINT,
-        $: $<MergeSuppliers<SUPPLIERS, HIRED>, OPTIONALS>
-    ) => void
+    init?: (value: CONSTRAINT, $: $MAP) => void
     /** Whether this supplier should be lazily evaluated */
     lazy?: boolean
     hire: (...hired: ProductSupplier[]) => any
@@ -196,9 +196,7 @@ export type SupplyMapFromSuppliers<
     WIDE extends boolean = true,
     $ = (supplier: any) => unknown
 > = {
-    [SUPPLIER in SUPPLIERS[number] as string extends SUPPLIER["name"]
-        ? never
-        : SUPPLIER["name"]]: SUPPLIER extends ProductSupplier
+    [SUPPLIER in SUPPLIERS[number] as SUPPLIER["name"]]: SUPPLIER extends ProductSupplier
         ? Product<
               SUPPLIER["_"]["constraint"],
               WIDE extends true
@@ -213,9 +211,7 @@ export type SupplyMapFromSuppliers<
         ? Resource<SUPPLIER["_"]["constraint"], SUPPLIER>
         : never
 } & {
-    [OPTIONAL in OPTIONALS[number] as string extends OPTIONAL["name"]
-        ? never
-        : OPTIONAL["name"]]?: OPTIONAL extends ProductSupplier
+    [OPTIONAL in OPTIONALS[number] as OPTIONAL["name"]]?: OPTIONAL extends ProductSupplier
         ? Product<
               OPTIONAL["_"]["constraint"],
               WIDE extends true
@@ -281,15 +277,21 @@ export type $$<
     ? BaseProductSupplier<ASSEMBLER["name"], ASSEMBLER["_"]["constraint"]> & {
           hire: <HIRED extends ProductSupplier[]>(
               ...hired: [...HIRED]
-          ) => {
+          ) => CircularDependencyGuard<{
+              name: ASSEMBLER["name"]
+              suppliers: ASSEMBLER["suppliers"]
+              optionals: ASSEMBLER["optionals"]
+              assemblers: ASSEMBLER["assemblers"]
+              hired: MergeSuppliers<ASSEMBLER["hired"], HIRED>
               assemble: (
-                  supplied: ASSEMBLER extends SUPPLIERS[number]
-                      ? ToSupply<[], [], HIRED>
-                      : ToSupply<
-                            ASSEMBLER["suppliers"],
-                            ASSEMBLER["optionals"],
-                            MergeSuppliers<ASSEMBLER["hired"], HIRED>
-                        >
+                  supplied: Omit<
+                      ToSupply<
+                          ASSEMBLER["suppliers"],
+                          ASSEMBLER["optionals"],
+                          MergeSuppliers<ASSEMBLER["hired"], HIRED>
+                      >,
+                      keyof ToSupply<SUPPLIERS, OPTIONALS, []>
+                  >
               ) => Product<
                   ASSEMBLER["_"]["constraint"],
                   BaseProductSupplier<
@@ -298,15 +300,16 @@ export type $$<
                   >,
                   $<HIRED, []>
               >
-          }
+          }>
           assemble: (
-              supplied: ASSEMBLER extends SUPPLIERS[number]
-                  ? SupplyMap
-                  : ToSupply<
-                        ASSEMBLER["suppliers"],
-                        ASSEMBLER["optionals"],
-                        ASSEMBLER["hired"]
-                    >
+              supplied: Omit<
+                  ToSupply<
+                      ASSEMBLER["suppliers"],
+                      ASSEMBLER["optionals"],
+                      ASSEMBLER["hired"]
+                  >,
+                  keyof ToSupply<SUPPLIERS, OPTIONALS, []>
+              >
           ) => Product<
               ASSEMBLER["_"]["constraint"],
               BaseProductSupplier<

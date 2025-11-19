@@ -579,4 +579,108 @@ describe("Assemblers Feature", () => {
             $$main.assemble({}).unpack()
         })
     })
+
+    describe("Type-safety of nested $$().assemble() calls", () => {
+        it("should properly type the result of nested $$().assemble() calls", () => {
+            const market = createMarket()
+
+            const $$resourceA = market.offer("resourceA").asResource<string>()
+            const $$resourceB = market.offer("resourceB").asResource<string>()
+
+            const $$productA = market.offer("productA").asProduct({
+                suppliers: [$$resourceA],
+                factory: ($) => {
+                    return "productA-value"
+                }
+            })
+
+            const $$productB = market.offer("productB").asProduct({
+                suppliers: [$$resourceA, $$resourceB],
+                factory: ($) => {
+                    expect($($$resourceA).unpack()).toBe("resourceA-value")
+                    expect($($$resourceB).unpack()).toBe("resourceB-value")
+                    return "productB-value"
+                }
+            })
+
+            const $$main = market.offer("main").asProduct({
+                suppliers: [$$productA],
+                assemblers: [$$productB],
+                factory: ($, $$) => {
+                    // @ts-expect-error - resourceB is not supplied
+                    $$($$productB).assemble({})
+                    // Works, resource A doesn't need to be supplied, reused from $
+                    $$($$productB)
+                        .assemble(index($$resourceB.pack("resourceB-value")))
+                        .unpack()
+                    return "main-value"
+                }
+            })
+
+            $$main.assemble(index($$resourceA.pack("resourceA-value"))).unpack()
+        })
+
+        it("Calling $$($$supplier).assemble() (reassemble) should never require any supplies to be supplied", () => {
+            const market = createMarket()
+
+            const $$resource = market.offer("resource").asResource<string>()
+            const $$product = market.offer("product").asProduct({
+                suppliers: [$$resource],
+                factory: ($) => {
+                    return $($$resource).unpack()
+                }
+            })
+
+            const $$main = market.offer("main").asProduct({
+                suppliers: [$$product],
+                factory: ($, $$) => {
+                    expect($$($$product).assemble({}).unpack()).toBe(
+                        "resource-value"
+                    )
+                }
+            })
+
+            $$main.assemble(index($$resource.pack("resource-value"))).unpack()
+        })
+
+        it("Calling $$().hire().assemble() should be properly typed + CircularDependency detection", () => {
+            const market = createMarket()
+
+            const $$resource = market.offer("resource").asResource<string>()
+            const $$productA = market.offer("product").asProduct({
+                factory: () => "productA-value"
+            })
+
+            const $$productB = $$productA.mock({
+                suppliers: [$$resource],
+                factory: ($) => $($$resource).unpack()
+            })
+
+            const $$productC = market.offer("productC").asProduct({
+                suppliers: [$$productA],
+                factory: ($) => $($$productA).unpack()
+            })
+
+            const $$main = market.offer("main").asProduct({
+                assemblers: [$$productC, $$productA],
+                factory: ($, $$) => {
+                    expect(() => {
+                        // @ts-expect-error - Just checking CircularDependency detection
+                        $$($$productA).hire($$productB).assemble({}).unpack()
+                    }).toThrow("Circular dependency detected")
+
+                    // @ts-expect-error - resource is not supplied
+                    $$($$productC).hire($$productB).assemble({}).unpack()
+                    expect(
+                        $$($$productC)
+                            .hire($$productB)
+                            .assemble(index($$resource.pack("resource-value")))
+                            .unpack()
+                    ).toBe("resource-value")
+                }
+            })
+
+            $$main.assemble(index($$resource.pack("resource-value"))).unpack()
+        })
+    })
 })
